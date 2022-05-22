@@ -17,6 +17,15 @@ See the `example.py` file for an example of how to use the `GitRepo` and
 
 If `example.py` is executed, it will print all the git commands it executes.
 
+## Installing
+
+The package is not available on [PyPI · The Python Package Index](https://pypi.org/)
+but you can install it with:
+
+```shell
+python3 -m pip install git+https://github.com/mmeisner/repomaker.git
+```
+
 ## Similar projects
 
 With a quick search I found only two other similar projects, although I am
