@@ -64,7 +64,7 @@ class RepoServer(object):
         Delete all repos on server
         """
         self.log.info(f"{self} deleting all repos")
-        shutil.rmtree(self.root_dir)
+        shutil.rmtree(self.root_dir, ignore_errors=True)
 
     def atinit(self):
         """
