@@ -23,6 +23,7 @@ def make_repo_abc(server_root, name, logger=log):
     path = f"{server_root}/{name}"
 
     r = GitRepo(path, logger=logger).init()
+    r.config_write_user(force=True)
     r.file_add("a", text="this is a file"). \
         commit(message="first commit"). \
         branch_move("main"). \
@@ -35,6 +36,11 @@ def make_repo_abc(server_root, name, logger=log):
         file_add("b", text="modified text", force=True). \
         commit(message="bugfixed file b"). \
         checkout("main")
+
+    user_name = r.config_read("user.name")
+    print(f"user.name = {user_name}")
+
+    return name
 
 
 def example_testcase():

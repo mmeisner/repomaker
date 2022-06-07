@@ -13,6 +13,9 @@ class GitRepo(BaseRepo):
     """
     VCS = "git"
 
+    USER_NAME = "Ada Lovelace"
+    USER_EMAIL = "ada@unito.it"
+
     @classmethod
     def create_from_clone(cls, url_base, name, branch=None, args=None, logger=None):
         # [--recurse-submodules[=<pathspec>]] [--[no-]shallow-submodules]
@@ -32,14 +35,47 @@ class GitRepo(BaseRepo):
     def _get_cmdline(self, cmdline):
         return f"git -C {self.path} {cmdline}"
 
+    def config_read(self, key):
+        """
+        Read git config value from local repo
 
-    ###########################################################################
-    # VCS state operation
-    ###########################################################################
+        :param key: Config key to read, e.g. 'user.email'
+        :return: Value of config key
+        """
+        out = self.run_command(f"config {key}", assert_ok=False)
+        return out.strip()
 
-    def checkout(self, ref=None):
-        self.run_command(f"checkout {ref}")
-        return self
+    def config_write(self, key, value):
+        """
+        Write local repo git config with key `key` with `value`
+
+        :param key: Config key to write, e.g. 'user.email'
+        :param value: Value of config key
+        """
+        self.run_command(f"config {key} '{value}'")
+
+    def config_write_user(self, user_name=None, user_email=None, force=False):
+        """
+        If git repo config does not contain 'user.name' then write
+        'user.name' and 'user.email' config.
+
+        If no `user_name` or `user_email` are provided, dummy defaults
+        will be used.
+
+        User name and email must have a value for "git commit" to succeed.
+
+        :param user_name: User name
+        :param user_email: User email
+        :param force: Force writing of config even if it already has a value
+        """
+        if force or not self.config_read("user.name"):
+            if not user_name:
+                user_name = GitRepo.USER_NAME
+            self.config_write("user.name", user_name)
+
+            if not user_email:
+                user_email = GitRepo.USER_EMAIL
+            self.config_write("user.email", user_email)
 
 
     ###########################################################################
@@ -48,6 +84,15 @@ class GitRepo(BaseRepo):
 
     def get_current_branch(self):
         return self.run_command(f"branch --show-current")
+
+
+    ###########################################################################
+    # VCS state operation
+    ###########################################################################
+
+    def checkout(self, ref=None):
+        self.run_command(f"checkout {ref}")
+        return self
 
 
     ###########################################################################
@@ -69,6 +114,10 @@ class GitRepo(BaseRepo):
             path.mkdir()
 
         self.run_command("init")
+
+        # ensure there is a username and email
+        self.config_write_user()
+
         return self
 
     def file_add(self, filepath, srcfile=None, text=None, force=False):
