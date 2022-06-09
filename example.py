@@ -40,7 +40,7 @@ def make_repo_abc(server_root, name, logger=log):
     user_name = r.config_read("user.name")
     print(f"user.name = {user_name}")
 
-    return name
+    return r
 
 
 def example_testcase():
@@ -64,7 +64,9 @@ def example_testcase():
 
     name = "abc"
     # make a repo on the server
-    make_repo_abc(server.root_dir, name=name)
+    repo = make_repo_abc(server.root_dir, name=name)
+    # Get the full reflog of the created repo
+    reflog = repo.reflog()
 
     # Now clone the repo from the server into /tmp
     os.chdir("/tmp")
@@ -75,10 +77,22 @@ def example_testcase():
     branch_name = r.get_current_branch()
     print(f"current branch = {branch_name}")
 
+    # Checkout bugfix branch
     r.checkout("bugfix")
     branch_name = r.get_current_branch()
     print(f"current branch = {branch_name}")
 
+    # Print the reflog of the original server repo
+    # It can be used to locate specific commit hashes
+    log.info("reflog of repo:")
+    for e in reflog:
+        print(e)
+
+    # Here we locate the commit(s) having "bugfixed" in the commit message
+    log.info("finding the 'bugfix' commit entry in reflog of repo:")
+    entries = r.reflog_find_substr(reflog, "subject", "bugfixed")
+    for e in entries:
+        print(e)
 
 def parser_create():
     description = f"""\

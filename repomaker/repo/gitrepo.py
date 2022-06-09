@@ -85,6 +85,40 @@ class GitRepo(BaseRepo):
     def get_current_branch(self):
         return self.run_command(f"branch --show-current")
 
+    def reflog(self, ref=""):
+        """
+        Get the reflog of the repository
+
+        :param ref: positional argument for 'git refloq'
+        :return: list of reflog dicts, one dict per git reflog entry
+        """
+        # format is:
+        # %H  = commit hash
+        # %h  = abbreviated commit hash
+        # %D  = ref names without the " (", ")" wrapping.
+        # %gd = shortened reflog selector, e.g., stash@{1}
+        # %gs = reflog subject
+        cmd = f"reflog --format='%h%x09%D%x09%gs' {ref}"
+        out = self.run_command(cmd)
+
+        reflog = [line.split("\t") for line in out.splitlines()]
+
+        keys = ['hash', 'refnames', 'subject']
+        reflog = [dict(zip(keys, entry)) for entry in reflog]
+
+        return reflog
+
+    @staticmethod
+    def reflog_find_substr(reflog, key, substr):
+        res = []
+        for entry in reflog:
+            if key not in entry:
+                raise ValueError(f"key '{key}' does not exit in reflog")
+            if substr in entry[key]:
+                res.append(entry)
+
+        return res
+
 
     ###########################################################################
     # VCS state operation
